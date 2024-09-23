@@ -2,19 +2,12 @@ import torch
 import random
 
 
-def get_label_names(dataset):
-    label_names = {}
-    if dataset == 'CMR':
-        label_names[0] = 'BG'
-        label_names[1] = 'LV-MYO'
-        label_names[2] = 'LV-BP'
-        label_names[3] = 'RV'
-
-    elif dataset == 'CHAOST2':
-        label_names[0] = 'BG'
-        label_names[1] = 'NCR'
-        label_names[2] = 'ED'
-        label_names[3] = 'ET'
+def get_label_names():
+    label_names = {
+        # 0: "None",
+        1: "Tumor",
+        # 2: "SNFH"
+    }
 
     return label_names
 

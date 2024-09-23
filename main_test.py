@@ -14,23 +14,37 @@ import torch.utils.data.distributed
 from torch.utils.data import DataLoader
 
 from models.fewshot import FewShotSeg
-from dataloaders.datasets import TestDataset
+from dataloaders.utils import get_test_loader, get_train_loader
 from dataloaders.specifics import *
 from utils import *
-
+from monai.utils import set_determinism
 
 def parse_arguments():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--data_dir', type=str, required=True)
+    # parser.add_argument('--data_dir', type=str, required=True)
     parser.add_argument('--save_dir', type=str, required=True)
     parser.add_argument('--pretrained_root', type=str, required=True)
-    parser.add_argument('--fold', type=int, required=True)
-    parser.add_argument('--dataset', type=str, required=True)
-    parser.add_argument('--n_shot', default=1, type=int)
+    # parser.add_argument('--fold', type=int, required=True)
+    # parser.add_argument('--dataset', type=str, required=True)
+    # parser.add_argument('--n_shot', default=1, type=int)
     parser.add_argument('--all_slices', default=True, type=bool)
     parser.add_argument('--EP1', default=False, type=bool)
-    parser.add_argument('--seed', default=None, type=int)
+    # parser.add_argument('--seed', default=1234, type=int)
     parser.add_argument('--workers', default=0, type=int)
+    parser.add_argument('--epochs', default=20, type=int)
+    parser.add_argument('--n_shot', default=1, type=int)
+    parser.add_argument('--n_query', default=1, type=int)
+    parser.add_argument('--n_way', default=1, type=int)
+    parser.add_argument('--batch-size', default=1, type=int)        
+    parser.add_argument('--lr', default=1e-3, type=float)
+    parser.add_argument('--lr_gamma', default=0.95, type=float)
+    parser.add_argument('--momentum', default=0.9, type=float)
+    parser.add_argument('--weight-decay', default=0.0005, type=float)
+    parser.add_argument('--seed', default=1234, type=int)
+    parser.add_argument('--bg_wt', default=0.7, type=float)
+    parser.add_argument('--t_loss_scaler', default=1.0, type=float)
+    parser.add_argument('--n_sv', type=int, required=True)
+
 
     return parser.parse_args()
 
@@ -57,22 +71,26 @@ def main():
     model.load_state_dict(torch.load(args.pretrained_root, map_location="cpu"))
 
     # Data loader.
-    test_dataset = TestDataset(args)
-    query_loader = DataLoader(test_dataset,
-                              batch_size=1,
-                              shuffle=False,
-                              num_workers=args.workers,
-                              pin_memory=True,
-                              drop_last=True)
+    # test_dataset = TestDataset(args)
+    # query_loader = DataLoader(test_dataset,
+    #                           batch_size=1,
+    #                           shuffle=False,
+    #                           num_workers=args.workers,
+    #                           pin_memory=True,
+    #                           drop_last=True)
+
+    query_loader, test_dataset = get_test_loader(args)
+
+    train_loader_test = get_train_loader(args)
 
     # Inference.
     logger.info('  Start inference ... Note: EP1 is ' + str(args.EP1))
-    logger.info('  Support: ' + str(test_dataset.support_dir[len(args.data_dir):]))
-    logger.info('  Query: ' +
-                str([elem[len(args.data_dir):] for elem in test_dataset.image_dirs]))
+    # logger.info('  Support: ' + str(test_dataset.support_dir[len(args.data_dir):]))
+    # logger.info('  Query: ' +
+    #             str([elem[len(args.data_dir):] for elem in test_dataset.image_dirs]))
 
     # Get unique labels (classes).
-    labels = get_label_names(args.dataset)
+    labels = get_label_names()
 
     # Loop over classes.
     class_dice = {}
@@ -145,7 +163,9 @@ def infer(model, query_loader, support_sample, args, logger, label_name):
         # Unpack query data.
         query_image = [sample['image'][i].float().cuda() for i in range(sample['image'].shape[0])]  # [C x 3 x H x W]
         query_label = sample['label'].long()  # C x H x W
-        query_id = sample['id'][0].split('image_')[1][:-len('.nii.gz')]
+        # query_id = sample['id'][0].split('image_')[1][:-len('.nii.gz')]
+        query_id = sample['id']
+
 
         # Compute output.
         if args.EP1 is True:
@@ -162,9 +182,11 @@ def infer(model, query_loader, support_sample, args, logger, label_name):
                 query_pred[idx_[sub_chunck]:idx_[sub_chunck+1]] = query_pred_s
 
         else:  # EP 2
-            query_pred, _, _ = model([support_image], [support_fg_mask], query_image, train=False)  # C x 2 x H x W
+            with torch.inference_mode() and torch.cuda.amp.autocast():
+                query_pred, _, _ = model([support_image], [support_fg_mask], query_image, train=False)  # C x 2 x H x W
             query_pred = query_pred.argmax(dim=1).cpu()  # C x H x W
             
+            print("query_pred shape", query_pred.shape)
             # np_arr = query_pred.cpu().detach().numpy()
 
             # np_arr = 1 - np_arr
@@ -176,7 +198,7 @@ def infer(model, query_loader, support_sample, args, logger, label_name):
         scores.record(query_pred, query_label)
 
         # Log.
-        logger.info('    Tested query volume: ' + sample['id'][0][len(args.data_dir):]
+        logger.info('    Tested query volume: ' + sample['id']
                     + '. Dice score:  ' + str(scores.patient_dice[-1].item()) + '. Accuracy:  ' + str(scores.accuracy[-1].item())
                     + '. Precision: ' + str(scores.precision[-1].item()))
 

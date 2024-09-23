@@ -24,7 +24,7 @@ from monai.transforms import (
     CropForegroundd,
 )
 
-from .datasets import TrainDataset
+from .datasets import TrainDataset, TestDataset
 
 import json
 import os
@@ -235,10 +235,16 @@ def get_train_loader(args):
     train_loader = monai.data.DataLoader(train_dataset, num_workers=0, batch_size=1, shuffle=True)
 
     # ensure train loader is working
-    # for i, data in enumerate(train_loader):
-    #     print("train loader", i)
-    #     print(data["image"].shape, data["label"].shape)
-    #     break
+    for i, data in enumerate(train_loader):
+        print("train loader", i)
+        # print(data["image"].shape, data["label"].shape)
+        # 'support_images': sup_img,
+        #           'support_fg_labels': sup_lbl,
+        #           'query_images': qry_img,
+        #           'query_labels': qry_lbl
+        print("shapes of support images, support fg labels, query images, query labels")
+        print(data["support_images"].shape, data["support_fg_labels"].shape, data["query_images"].shape, data["query_labels"].shape)
+        break
 
     # val_dataset = TrainDataset(args=args, files=validation_files, transforms=val_transforms)
     # val_loader = monai.data.DataLoader(val_dataset, batch_size=1, shuffle=False, num_workers=0)
@@ -246,3 +252,52 @@ def get_train_loader(args):
     # need to resolve training slow ness??
     # return train_loader, val_loader
     return train_loader
+
+
+def get_test_loader(args):
+
+    val_transforms = Compose(
+        [
+            LoadImaged(keys=["image", "label"]), # assuming loading multiple at the same time.
+            ConvertToMultiChannel(keys="label", use_softmax=False),
+            CastToTyped(keys=["image", "label"], dtype=(torch.float16, torch.uint8)),
+            
+            ConvertToSingleChannel(keys="label", use_softmax=False),
+
+            ToTensord(keys=["image", "label"], track_meta=False),
+        ]
+    )
+    # ! TODO: change learning rate
+    
+    json_path = os.path.join(os.getenv("PROJECT_PATH"), "FSMSA", "train_preprocessed.json")
+    dataset_path = os.getenv("PREPROCESSED_PATH")
+
+    fold_train, fold_val = "-1", [0]
+    train_files, validation_files, test_files = datafold_read(dataset_path=dataset_path, fold_val=fold_val, fold_train=fold_train,
+                                                              modalities=["t2f", "t1c", "t1n"], json_path=json_path)
+
+
+    print("length of train, validation files", len(train_files), len(validation_files))
+    print("first val", validation_files[0])
+    # send to a yaml file
+    file_paths = {
+        "train": train_files,
+        "val": validation_files,
+        "test": test_files
+    }
+
+    # train_dataset = monai.data.Dataset(data=train_files, transform=train_transforms)
+    # print("MULTIMODAL", args.multimodal, "MULTICHANNEL", args.multichannel)
+
+
+    val_dataset = TestDataset(args=args, files=validation_files, transforms=val_transforms)
+    val_loader = monai.data.DataLoader(val_dataset, batch_size=1, shuffle=False, num_workers=0)
+
+    # ensure val loader is working
+    for i, data in enumerate(val_loader):
+        print("val loader", i)
+        print(data["image"].shape, data["label"].shape)
+        break
+    # need to resolve training slow ness??
+    # return train_loader, val_loader
+    return val_loader, val_dataset

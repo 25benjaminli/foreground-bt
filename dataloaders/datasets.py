@@ -18,17 +18,17 @@ class TestDataset(Dataset):
         self.files = files
         
         # reading the paths
-        # self.image_dirs = glob.glob(os.path.join(args.data_root, 'images/image*'))
-        # self.image_dirs = sorted(self.image_dirs, key=lambda x: int(x.split('_')[-1].split('.nii.gz')[0]))
-        # self.image_dirs = self.image_dirs[:len(self.image_dirs)//60]
+        # self.files = glob.glob(os.path.join(args.data_root, 'images/image*'))
+        # self.files = sorted(self.files, key=lambda x: int(x.split('_')[-1].split('.nii.gz')[0]))
+        # self.files = self.files[:len(self.files)//60]
 
         # self.FOLD = get_folds(args.dataset)
-        # self.image_dirs = [elem for idx, elem in enumerate(self.image_dirs) if idx in self.FOLD[args.fold]]
+        # self.files = [elem for idx, elem in enumerate(self.files) if idx in self.FOLD[args.fold]]
 
         # split into support/query\
-        self.support_index = random.randint(0,len(self.image_dirs))
-        self.support_dir = self.image_dirs[self.support_index] # - 1
-        self.image_dirs = [self.image_dirs[image] for image in range(len(self.image_dirs)) if image != self.support_index] # :-1  # remove support 
+        self.support_index = random.randint(0,len(self.files)-1)
+        self.support_dir = self.files[self.support_index] # - 1
+        self.files = [self.files[image] for image in range(len(self.files)) if image != self.support_index] # :-1  # remove support 
         self.label_id = None 
 
 
@@ -37,14 +37,19 @@ class TestDataset(Dataset):
 
     def __getitem__(self, idx):
 
-        # img_path = self.image_dirs[idx]
+        # img_path = self.files[idx]
         # img = sitk.GetArrayFromImage(sitk.ReadImage(img_path))
         # img = (img - img.mean()) / img.std()
 
         di = self.transforms(self.files[idx])
-        img = di['image']
-        label = di['label']
-        # img = np.stack(3 * [img], axis=1)
+        img = di['image'][0].cpu().numpy() # SELECT flair
+        label = di['label'][0].cpu().numpy()
+
+        # transpose image and label, which are (H, W, D) to (D, H, W)
+        img = np.transpose(img, (2, 0, 1))
+        label = np.transpose(label, (2, 0, 1))
+
+        img = np.stack(3 * [img], axis=1)
 
         # lbl = sitk.GetArrayFromImage(
         #     sitk.ReadImage(img_path.split('image_')[0] + 'label_' + img_path.split('image_')[-1]))
@@ -52,9 +57,11 @@ class TestDataset(Dataset):
         # lbl[lbl == 500] = 2
         # lbl[lbl == 600] = 3
 
-        label = 1 * (label == self.label_id) # ?
-
-        sample = {'id': self.files[idx]}
+        # label = 1 * (label == self.label_id) # ?
+        # print("files", self.files[idx])
+        id_value = self.files[idx]["label"].split('/')[-1].split('-')[2]
+        print("id value", id_value)
+        sample = {'id': id_value}
 
         sample['image'] = img
         sample['label'] = label
@@ -76,9 +83,18 @@ class TestDataset(Dataset):
             raise ValueError('Need to specify label class!')
 
         
-        di = self.transforms(self.files[idx])
-        img = di['image']
-        label = di['label']
+        di = self.transforms(self.support_dir)
+        img = di['image'][0] # select FLAIR only
+        label = di['label'][0]
+
+        # transpose image and label, which are (H, W, D) to (D, H, W)
+        img = np.transpose(img, (2, 0, 1))
+        label = np.transpose(label, (2, 0, 1))
+
+        # stack three times on axis 1
+        img = torch.stack(3 * [img], axis=1)
+
+        print("image shape", img.shape)
 
         sample = {}
         if all_slices:
@@ -104,7 +120,7 @@ class TrainDataset(Dataset):
         self.n_way = args.n_way
         self.n_query = args.n_query
         self.n_sv = args.n_sv
-        self.max_iter = args.max_iterations
+        # self.max_iter = args.max_iterations
         self.read = True  # read images before get_item
         self.train_sampling = 'neighbors'
         self.min_size = 200
@@ -113,9 +129,9 @@ class TrainDataset(Dataset):
         self.files = files
         self.transforms = transforms
 
-        # self.image_dirs = glob.glob(os.path.join(args.data_root, 'images/image*'))
-        # self.image_dirs = sorted(self.image_dirs, key=lambda x: int(x.split('_')[-1].split('.nii.gz')[0]))
-        # self.image_dirs = self.image_dirs[:len(self.image_dirs)//self.factor]
+        # self.files = glob.glob(os.path.join(args.data_root, 'images/image*'))
+        # self.files = sorted(self.files, key=lambda x: int(x.split('_')[-1].split('.nii.gz')[0]))
+        # self.files = self.files[:len(self.files)//self.factor]
 
         # self.label_dirs = glob.glob(os.path.join(args.data_root, 'labels/label*'))
         # self.label_dirs = sorted(self.label_dirs, key=lambda x: int(x.split('_')[-1].split('.nii.gz')[0]))
@@ -123,14 +139,14 @@ class TrainDataset(Dataset):
 
         # remove test fold!
         # self.FOLD = get_folds(args.dataset)
-        # self.image_dirs = [elem for idx, elem in enumerate(self.image_dirs) if idx not in self.FOLD[args.fold]]
+        # self.files = [elem for idx, elem in enumerate(self.files) if idx not in self.FOLD[args.fold]]
         # self.label_dirs = [elem for idx, elem in enumerate(self.label_dirs) if idx not in self.FOLD[args.fold]]
 
         # read images
         # if self.read:
         #     self.images = {}
         #     self.labels = {}
-        #     for image_dir, label_dir in zip(self.image_dirs, self.label_dirs):
+        #     for image_dir, label_dir in zip(self.files, self.label_dirs):
         #         self.images[image_dir] = sitk.GetArrayFromImage(sitk.ReadImage(image_dir))
         #         self.labels[label_dir] = sitk.GetArrayFromImage(sitk.ReadImage(label_dir))
 
@@ -141,15 +157,15 @@ class TrainDataset(Dataset):
     def __getitem__(self, idx):
 
         # sample patient idx
-        # pat_idx = random.choice(range(len(self.image_dirs)))
+        # pat_idx = random.choice(range(len(self.files)))
 
         # if self.read:
         #     # get image/label volume from dictionary
-        #     img = self.images[self.image_dirs[pat_idx]]
+        #     img = self.images[self.files[pat_idx]]
         #     label = self.labels[self.label_dirs[pat_idx]]
         # else:
         #     # read image/supervoxel volume into memory
-        #     img = sitk.GetArrayFromImage(sitk.ReadImage(self.image_dirs[pat_idx]))
+        #     img = sitk.GetArrayFromImage(sitk.ReadImage(self.files[pat_idx]))
         #     label = sitk.GetArrayFromImage(sitk.ReadImage(self.label_dirs[pat_idx]))
 
         # # normalize
@@ -161,6 +177,12 @@ class TrainDataset(Dataset):
 
         img = di['image'].cpu().numpy()[0] # select flair
         label = di['label'].cpu().numpy()[0]
+
+        # transpose image and label, which are (H, W, D) to (D, H, W)
+        img = np.transpose(img, (2, 0, 1))
+        label = np.transpose(label, (2, 0, 1))
+
+        # print("image, label shape", img.shape, label.shape)
 
         # only select t2 for the image, which happens to be the first index for all images
 
@@ -222,10 +244,17 @@ class TrainDataset(Dataset):
         # else:
         #     sup_img, sup_lbl = self.geom_transform(sup_img, sup_lbl)
 
+        # print shapes of support, query, labels
+        # print("support image shape", sup_img.shape)
+        # print("query image shape", qry_img.shape)
+        # print("support label shape", sup_lbl.shape)
+        # print("query label shape", qry_lbl.shape)
+
         sample = {'support_images': sup_img,
                   'support_fg_labels': sup_lbl,
                   'query_images': qry_img,
-                  'query_labels': qry_lbl}
+                  'query_labels': qry_lbl,
+                  'id': self.files[idx]["label"].split('/')[-1].split('-')[2]}
 
         return sample
 

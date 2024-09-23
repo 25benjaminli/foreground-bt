@@ -30,8 +30,10 @@ def parse_arguments():
     # parser.add_argument('--fold', type=int, required=True)
 
     parser.add_argument('--workers', default=1, type=int)
-    parser.add_argument('--steps', default=60000, type=int) # Setting number of epochs
-    parser.add_argument('--max_iterations', default=2000, type=int) 
+    # parser.add_argument('--steps', default=60000, type=int) # Setting number of epochs
+    # parser.add_argument('--max_iterations', default=2000, type=int) 
+    # add epochs
+    parser.add_argument('--epochs', default=20, type=int)
     parser.add_argument('--n_shot', default=1, type=int)
     parser.add_argument('--n_query', default=1, type=int)
     parser.add_argument('--n_way', default=1, type=int)
@@ -74,8 +76,10 @@ def main():
     optimizer = torch.optim.SGD(model.parameters(), args.lr,
                                 momentum=args.momentum,
                                 weight_decay=args.weight_decay)
-    milestones = [(ii + 1) * 1000 for ii in range(args.steps // 1000 - 1)]
-    scheduler = MultiStepLR(optimizer, milestones=milestones, gamma=args.lr_gamma)
+    # milestones = [(ii + 1) * 1000 for ii in range(args.steps // 1000 - 1)]
+    # scheduler = MultiStepLR(optimizer, milestones=milestones, gamma=args.lr_gamma)
+
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=20, eta_min=0.0001)
 
     # Define loss function.
     my_weight = torch.FloatTensor([args.bg_wt, 1.0]).cuda()
@@ -94,7 +98,7 @@ def main():
     #             str([elem[len(args.data_dir):] for elem in train_dataset.image_dirs]))
 
     # Start training.
-    sub_epochs = args.steps // args.max_iterations
+    # args.epochs = args.steps // args.max_iterations
     logger.info('  Start training ...')
 
     losses_arr = []
@@ -103,26 +107,34 @@ def main():
     t_loss_arr = []
     X_axis = []
 
-    for epoch in range(sub_epochs):
+    for epoch in range(args.epochs):
 
         # Train.
         batch_time, data_time, losses, q_loss, align_loss, t_loss = train(train_loader, model, criterion, optimizer,
-                                                                          scheduler, args)
+                                                                          args)
 
         # Log
-        logger.info(f'============== Epoch [{epoch}/{sub_epochs}] ==============')
+        logger.info(f'============== Epoch [{epoch}/{args.epochs}] ==============')
         logger.info('  Batch time: {:6.3f}'.format(batch_time))
         logger.info('  Loading time: {:6.3f}'.format(data_time))
         logger.info('  Total Loss  : {:.5f}'.format(losses))
         logger.info('  Query Loss  : {:.5f}'.format(q_loss))
         logger.info('  Align Loss  : {:.5f}'.format(align_loss))
         logger.info('  Threshold Loss  : {:.5f}'.format(t_loss))
+        # print learning rate
+        print(f"learning rate {scheduler.get_last_lr()}")
 
         losses_arr.append(losses)
         q_loss_arr.append(q_loss)
         align_loss_arr.append(align_loss)
         t_loss_arr.append(t_loss)
         X_axis.append(epoch+1)
+
+        scheduler.step() # update LR
+
+        # cut it out after 3 epochs
+        if epoch > 3:
+            break
 
     # Save trained model.
     logger.info('Saving model ...')
@@ -135,7 +147,7 @@ def main():
 
     plt.show() 
 
-def train(train_loader, model, criterion, optimizer, scheduler, args):
+def train(train_loader, model, criterion, optimizer, args):
 
     batch_time = AverageMeter('Time', ':6.3f')
     data_time = AverageMeter('Data', ':6.3f')
@@ -145,11 +157,13 @@ def train(train_loader, model, criterion, optimizer, scheduler, args):
     t_loss = AverageMeter('Threshold loss', ':.4f')
 
     # Train mode.
-    model.train()
+    model.train()  # change learning rate
 
     end = time.time()
     for i, sample in tqdm(enumerate(train_loader)):
-
+        if i == 0:
+            # print the id
+            print("id", sample['id'])
         # Extract support and query data.
         support_images = [[shot.float().cuda() for shot in way]
                           for way in sample['support_images']]
@@ -176,7 +190,6 @@ def train(train_loader, model, criterion, optimizer, scheduler, args):
 
         loss.backward()
         optimizer.step()
-        scheduler.step()
 
         # update losses
         losses.update(loss.item(), query_pred.size(0))
