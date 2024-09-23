@@ -6,7 +6,7 @@ import os
 import SimpleITK as sitk
 import random
 import numpy as np
-from . import image_transforms as myit
+# from . import image_transforms as myit
 from .specifics import *
 
 
@@ -41,7 +41,7 @@ class TestDataset(Dataset):
         # img = sitk.GetArrayFromImage(sitk.ReadImage(img_path))
         # img = (img - img.mean()) / img.std()
 
-        di = self.transforms(self.files[index])
+        di = self.transforms(self.files[idx])
         img = di['image']
         label = di['label']
         # img = np.stack(3 * [img], axis=1)
@@ -54,7 +54,7 @@ class TestDataset(Dataset):
 
         label = 1 * (label == self.label_id) # ?
 
-        sample = {'id': img_path}
+        sample = {'id': self.files[idx]}
 
         sample['image'] = img
         sample['label'] = label
@@ -76,7 +76,7 @@ class TestDataset(Dataset):
             raise ValueError('Need to specify label class!')
 
         
-        di = self.transforms(self.files[index])
+        di = self.transforms(self.files[idx])
         img = di['image']
         label = di['label']
 
@@ -111,6 +111,7 @@ class TrainDataset(Dataset):
         self.factor = 20
 
         self.files = files
+        self.transforms = transforms
 
         # self.image_dirs = glob.glob(os.path.join(args.data_root, 'images/image*'))
         # self.image_dirs = sorted(self.image_dirs, key=lambda x: int(x.split('_')[-1].split('.nii.gz')[0]))
@@ -156,10 +157,22 @@ class TrainDataset(Dataset):
 
         # sample class(es) (supervoxel)
 
-        di = self.transforms(self.files[index])
+        di = self.transforms(self.files[idx])
 
-        img = di['image'].cpu().numpy()
-        label = di['label'].cpu().numpy()
+        img = di['image'].cpu().numpy()[0] # select flair
+        label = di['label'].cpu().numpy()[0]
+
+        # only select t2 for the image, which happens to be the first index for all images
+
+        # img = np.transpose(img, (0, 3, 1, 2))
+        # label = np.transpose(label, (0, 3, 1, 2)) # B x D x H x W
+        # print("image, label shape", img.shape, label.shape)
+
+        # print label uniques
+        # print(np.unique(label))
+
+        # transpose
+        
 
         
         unique = list(np.unique(label))
@@ -215,3 +228,4 @@ class TrainDataset(Dataset):
                   'query_labels': qry_lbl}
 
         return sample
+

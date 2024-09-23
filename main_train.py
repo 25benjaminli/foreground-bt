@@ -15,17 +15,19 @@ from torch.optim.lr_scheduler import MultiStepLR
 import matplotlib.pyplot as plt
 
 from models.fewshot import FewShotSeg
-from dataloaders.datasets import TrainDataset 
+from dataloaders.utils import get_train_loader
 from utils import *
-
-
+# import set determinism from monai
+from monai.utils import set_determinism
+import numpy as np
+from tqdm import tqdm
 def parse_arguments():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--data_dir', type=str, required=True)
+    # parser.add_argument('--data_dir', type=str, required=True)
     parser.add_argument('--save_dir', type=str, required=True)
-    parser.add_argument('--dataset', type=str, required=True)
+    # parser.add_argument('--dataset', type=str, required=True)
     parser.add_argument('--n_sv', type=int, required=True)
-    parser.add_argument('--fold', type=int, required=True)
+    # parser.add_argument('--fold', type=int, required=True)
 
     parser.add_argument('--workers', default=1, type=int)
     parser.add_argument('--steps', default=60000, type=int) # Setting number of epochs
@@ -38,7 +40,7 @@ def parse_arguments():
     parser.add_argument('--lr_gamma', default=0.95, type=float)
     parser.add_argument('--momentum', default=0.9, type=float)
     parser.add_argument('--weight-decay', default=0.0005, type=float)
-    parser.add_argument('--seed', default=None, type=int)
+    parser.add_argument('--seed', default=1234, type=int)
     parser.add_argument('--bg_wt', default=0.7, type=float)
     parser.add_argument('--t_loss_scaler', default=1.0, type=float)
 
@@ -53,6 +55,9 @@ def main():
         random.seed(args.seed)
         torch.manual_seed(args.seed)
         cudnn.deterministic = True
+        set_determinism(seed=args.seed)
+        np.random.seed(args.seed)
+        
 
     # Set up logging.
     logger = set_logger(args.save_dir, 'train.log')
@@ -81,11 +86,12 @@ def main():
     cudnn.benchmark = True
 
     # Define data set and loader.
-    train_dataset = TrainDataset(args)
-    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True,
-                                               num_workers=args.workers, pin_memory=True, drop_last=False)
-    logger.info('  Training on images not in test fold: ' +
-                str([elem[len(args.data_dir):] for elem in train_dataset.image_dirs]))
+    train_loader = get_train_loader(args)
+    # train_dataset = TrainDataset(args)
+    # train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True,
+    #                                            num_workers=args.workers, pin_memory=True, drop_last=False)
+    # logger.info('  Training on images not in test fold: ' +
+    #             str([elem[len(args.data_dir):] for elem in train_dataset.image_dirs]))
 
     # Start training.
     sub_epochs = args.steps // args.max_iterations
@@ -104,7 +110,7 @@ def main():
                                                                           scheduler, args)
 
         # Log
-        logger.info('============== Epoch [{}] =============='.format(epoch))
+        logger.info(f'============== Epoch [{epoch}/{sub_epochs}] ==============')
         logger.info('  Batch time: {:6.3f}'.format(batch_time))
         logger.info('  Loading time: {:6.3f}'.format(data_time))
         logger.info('  Total Loss  : {:.5f}'.format(losses))
@@ -142,7 +148,7 @@ def train(train_loader, model, criterion, optimizer, scheduler, args):
     model.train()
 
     end = time.time()
-    for i, sample in enumerate(train_loader):
+    for i, sample in tqdm(enumerate(train_loader)):
 
         # Extract support and query data.
         support_images = [[shot.float().cuda() for shot in way]

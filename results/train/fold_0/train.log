@@ -1,0 +1,43 @@
+2024-09-23 00:42:47,516:INFO: Namespace(save_dir='results/train/fold_0', n_sv=5000, workers=1, steps=60000, max_iterations=2000, n_shot=1, n_query=1, n_way=1, batch_size=1, lr=0.001, lr_gamma=0.95, momentum=0.9, weight_decay=0.0005, seed=1234, bg_wt=0.7, t_loss_scaler=1.0)
+2024-09-23 00:43:26,424:INFO: Namespace(save_dir='results/train/fold_0', n_sv=5000, workers=1, steps=60000, max_iterations=2000, n_shot=1, n_query=1, n_way=1, batch_size=1, lr=0.001, lr_gamma=0.95, momentum=0.9, weight_decay=0.0005, seed=1234, bg_wt=0.7, t_loss_scaler=1.0)
+2024-09-23 00:43:36,371:INFO: Namespace(save_dir='results/train/fold_0', n_sv=5000, workers=1, steps=60000, max_iterations=2000, n_shot=1, n_query=1, n_way=1, batch_size=1, lr=0.001, lr_gamma=0.95, momentum=0.9, weight_decay=0.0005, seed=1234, bg_wt=0.7, t_loss_scaler=1.0)
+2024-09-23 00:43:49,571:INFO: Namespace(save_dir='results/train/fold_0', n_sv=5000, workers=1, steps=60000, max_iterations=2000, n_shot=1, n_query=1, n_way=1, batch_size=1, lr=0.001, lr_gamma=0.95, momentum=0.9, weight_decay=0.0005, seed=1234, bg_wt=0.7, t_loss_scaler=1.0)
+2024-09-23 00:43:50,157:INFO:   Start training ...
+2024-09-23 00:45:08,869:INFO: Namespace(save_dir='results/train/fold_0', n_sv=5000, workers=1, steps=60000, max_iterations=2000, n_shot=1, n_query=1, n_way=1, batch_size=1, lr=0.001, lr_gamma=0.95, momentum=0.9, weight_decay=0.0005, seed=1234, bg_wt=0.7, t_loss_scaler=1.0)
+2024-09-23 00:45:27,050:INFO: Namespace(save_dir='results/train/fold_0', n_sv=5000, workers=1, steps=60000, max_iterations=2000, n_shot=1, n_query=1, n_way=1, batch_size=1, lr=0.001, lr_gamma=0.95, momentum=0.9, weight_decay=0.0005, seed=1234, bg_wt=0.7, t_loss_scaler=1.0)
+2024-09-23 00:46:23,504:INFO: Namespace(save_dir='results/train/fold_0', n_sv=5000, workers=1, steps=60000, max_iterations=2000, n_shot=1, n_query=1, n_way=1, batch_size=1, lr=0.001, lr_gamma=0.95, momentum=0.9, weight_decay=0.0005, seed=1234, bg_wt=0.7, t_loss_scaler=1.0)
+2024-09-23 00:47:03,351:INFO: Namespace(save_dir='results/train/fold_0', n_sv=5000, workers=1, steps=60000, max_iterations=2000, n_shot=1, n_query=1, n_way=1, batch_size=1, lr=0.001, lr_gamma=0.95, momentum=0.9, weight_decay=0.0005, seed=1234, bg_wt=0.7, t_loss_scaler=1.0)
+2024-09-23 00:47:55,114:INFO: Namespace(save_dir='results/train/fold_0', n_sv=5000, workers=1, steps=60000, max_iterations=2000, n_shot=1, n_query=1, n_way=1, batch_size=1, lr=0.001, lr_gamma=0.95, momentum=0.9, weight_decay=0.0005, seed=1234, bg_wt=0.7, t_loss_scaler=1.0)
+2024-09-23 00:49:55,312:INFO: Namespace(save_dir='results/train/fold_0', n_sv=5000, workers=1, steps=60000, max_iterations=2000, n_shot=1, n_query=1, n_way=1, batch_size=1, lr=0.001, lr_gamma=0.95, momentum=0.9, weight_decay=0.0005, seed=1234, bg_wt=0.7, t_loss_scaler=1.0)
+2024-09-23 00:50:18,942:INFO: Namespace(save_dir='results/train/fold_0', n_sv=5000, workers=1, steps=60000, max_iterations=2000, n_shot=1, n_query=1, n_way=1, batch_size=1, lr=0.001, lr_gamma=0.95, momentum=0.9, weight_decay=0.0005, seed=1234, bg_wt=0.7, t_loss_scaler=1.0)
+2024-09-23 00:51:21,462:INFO: Namespace(save_dir='results/train/fold_0', n_sv=5000, workers=1, steps=60000, max_iterations=2000, n_shot=1, n_query=1, n_way=1, batch_size=1, lr=0.001, lr_gamma=0.95, momentum=0.9, weight_decay=0.0005, seed=1234, bg_wt=0.7, t_loss_scaler=1.0)
+2024-09-23 00:51:51,525:INFO: Namespace(save_dir='results/train/fold_0', n_sv=5000, workers=1, steps=60000, max_iterations=2000, n_shot=1, n_query=1, n_way=1, batch_size=1, lr=0.001, lr_gamma=0.95, momentum=0.9, weight_decay=0.0005, seed=1234, bg_wt=0.7, t_loss_scaler=1.0)
+2024-09-23 00:52:25,270:INFO: Namespace(save_dir='results/train/fold_0', n_sv=5000, workers=1, steps=60000, max_iterations=2000, n_shot=1, n_query=1, n_way=1, batch_size=1, lr=0.001, lr_gamma=0.95, momentum=0.9, weight_decay=0.0005, seed=1234, bg_wt=0.7, t_loss_scaler=1.0)
+2024-09-23 00:52:25,851:INFO:   Start training ...
+2024-09-23 00:52:46,158:INFO: Namespace(save_dir='results/train/fold_0', n_sv=5000, workers=1, steps=60000, max_iterations=2000, n_shot=1, n_query=1, n_way=1, batch_size=1, lr=0.001, lr_gamma=0.95, momentum=0.9, weight_decay=0.0005, seed=1234, bg_wt=0.7, t_loss_scaler=1.0)
+2024-09-23 00:52:46,732:INFO:   Start training ...
+2024-09-23 00:52:54,310:INFO: Namespace(save_dir='results/train/fold_0', n_sv=5000, workers=1, steps=60000, max_iterations=2000, n_shot=1, n_query=1, n_way=1, batch_size=1, lr=0.001, lr_gamma=0.95, momentum=0.9, weight_decay=0.0005, seed=1234, bg_wt=0.7, t_loss_scaler=1.0)
+2024-09-23 00:52:54,861:INFO:   Start training ...
+2024-09-23 00:55:08,571:INFO: ============== Epoch [0] ==============
+2024-09-23 00:55:08,572:INFO:   Batch time:  2.476
+2024-09-23 00:55:08,572:INFO:   Loading time:  2.330
+2024-09-23 00:55:08,572:INFO:   Total Loss  : -0.20271
+2024-09-23 00:55:08,572:INFO:   Query Loss  : 0.15776
+2024-09-23 00:55:08,572:INFO:   Align Loss  : 0.14039
+2024-09-23 00:55:08,572:INFO:   Threshold Loss  : -0.50086
+2024-09-23 00:57:19,621:INFO: ============== Epoch [1] ==============
+2024-09-23 00:57:19,622:INFO:   Batch time:  2.427
+2024-09-23 00:57:19,622:INFO:   Loading time:  2.304
+2024-09-23 00:57:19,622:INFO:   Total Loss  : -0.27493
+2024-09-23 00:57:19,622:INFO:   Query Loss  : 0.11983
+2024-09-23 00:57:19,622:INFO:   Align Loss  : 0.10757
+2024-09-23 00:57:19,622:INFO:   Threshold Loss  : -0.50233
+2024-09-23 00:58:25,228:INFO: Namespace(save_dir='results/train/fold_0', n_sv=5000, workers=1, steps=60000, max_iterations=2000, n_shot=1, n_query=1, n_way=1, batch_size=1, lr=0.001, lr_gamma=0.95, momentum=0.9, weight_decay=0.0005, seed=1234, bg_wt=0.7, t_loss_scaler=1.0)
+2024-09-23 00:58:25,798:INFO:   Start training ...
+2024-09-23 01:00:38,947:INFO: ============== Epoch [0/30] ==============
+2024-09-23 01:00:38,948:INFO:   Batch time:  2.466
+2024-09-23 01:00:38,948:INFO:   Loading time:  2.320
+2024-09-23 01:00:38,948:INFO:   Total Loss  : -0.20219
+2024-09-23 01:00:38,948:INFO:   Query Loss  : 0.16215
+2024-09-23 01:00:38,948:INFO:   Align Loss  : 0.13652
+2024-09-23 01:00:38,948:INFO:   Threshold Loss  : -0.50087
