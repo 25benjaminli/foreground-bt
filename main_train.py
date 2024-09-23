@@ -83,7 +83,7 @@ def main():
     # Define data set and loader.
     train_dataset = TrainDataset(args)
     train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True,
-                                               num_workers=args.workers, pin_memory=True, drop_last=True)
+                                               num_workers=args.workers, pin_memory=True, drop_last=False)
     logger.info('  Training on images not in test fold: ' +
                 str([elem[len(args.data_dir):] for elem in train_dataset.image_dirs]))
 
